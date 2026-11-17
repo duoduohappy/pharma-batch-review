@@ -4,7 +4,7 @@
 
 [部署到 Render](https://render.com/deploy?repo=https://github.com/duoduohappy/pharma-batch-review) · [部署说明](DEPLOY_RENDER.md)
 
-面试与业务讨论演示：WMS 仓储 + LIMS 检验 + MES 生产 → 确定性检查 → 带来源摘要 → 人工模拟签核 → 版本整改复验。
+业务流程演示：WMS 仓储 + LIMS 检验 + MES 生产 → 确定性检查 → 带来源摘要 → 人工模拟签核 → 版本整改复验。
 
 ## v0.2：从操作引导进入完整业务闭环
 
