@@ -1,13 +1,15 @@
 import {audit,review,rules,seed,RULE_VERSION} from './core.mjs';
+import {workflow} from './workflow.mjs';
 export async function api(request,env={}){
  const path=new URL(request.url).pathname;const json=(v,status=200)=>new Response(JSON.stringify(v),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
  try{
-  if(path==='/api/health')return json({ok:true,version:'0.1.0',model:!!env.LLM_BASE_URL&&!!env.LLM_MODEL?'configured':'not-configured',storage:'browser-local',simulation:true});
+  if(path==='/api/health')return json({ok:true,version:'0.2.0',model:!!env.LLM_BASE_URL&&!!env.LLM_MODEL?'configured':'not-configured',storage:'browser-local',simulation:true});
   if(path==='/api/seed')return json({batches:seed(),rules,rule_version:RULE_VERSION});
   if(request.method!=='POST')return json({error:'方法不支持'},405);
   const raw=await request.text();if(raw.length>550000)return json({error:'请求过大'},413);const body=JSON.parse(raw);
   if(path==='/api/audit')return json(await audit(body.batch));
   if(path==='/api/review')return json(await review(body.batch,body));
+  if(path==='/api/workflow')return json(await workflow(body.batch,body));
   if(path==='/api/summary'){
     const a=await audit(body.batch);const evidence=a.findings.map(f=>({id:f.id,rule:f.rule,source:f.source,message:f.message}));
     const fallback={mode:'rules',text:a.summary+' '+(evidence.length?evidence.map(f=>`[${f.id}] ${f.message}（${f.source}，${f.rule}）`).join('\n'):'当前固定检查均通过，仍须人工审核。'),evidence_ids:evidence.map(f=>f.id),fingerprint:a.fingerprint};

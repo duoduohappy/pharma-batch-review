@@ -1,1 +1,1 @@
-{"name":"pharma-batch-review","version":"0.1.0","private":true,"type":"module","engines":{"node":">=22 <23"},"scripts":{"start":"node server.mjs","test":"node --test tests.mjs","test:smoke":"node smoke.mjs","build":"node build.mjs"}}
+{"name":"pharma-batch-review","version":"0.2.0","private":true,"type":"module","engines":{"node":">=22 <23"},"scripts":{"start":"node server.mjs","test":"node --test tests.mjs workflow_tests.mjs","test:smoke":"node smoke.mjs","build":"node build.mjs"}}

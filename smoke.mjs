@@ -12,5 +12,6 @@ try{
  const fixed=batches[2];fixed.revision=2;fixed.lims.records[1].reviewer='QC-王';fixed.wms.records[0].status='RELEASED';fixed.mes.records.push({id:'M-fixed',step:'包装检查',complete:true});
  const checked=await post('/api/audit',{batch:fixed});assert.equal(checked.status,'READY');const signed=await post('/api/review',{batch:fixed,fingerprint:checked.fingerprint,reviewer:'QA-李',reason:'已核对整改',decision:'APPROVE'});assert.equal(signed.decision,'APPROVE');
  const summary=await post('/api/summary',{batch:batches[1]});assert.equal(summary.mode,'rules');
+ let manual=batches[2];for(const command of [{action:'REVIEW_RESULT',record:manual.lims.records[1].id},{action:'COMPLETE_STEP',step:'包装检查'},{action:'RELEASE_WAREHOUSE'}]){const checked=await post('/api/audit',{batch:manual});const response=await post('/api/workflow',{batch:manual,...command,actor:'QC-王',reason:'模拟来源凭证已核对',fingerprint:checked.fingerprint});manual=response.batch}assert.equal((await post('/api/audit',{batch:manual})).status,'READY');
  console.log('HTTP smoke PASS: 0.0.0.0 binding, pages, health, blocked approval, correction, approval, rules fallback');
 }finally{child.kill('SIGTERM');await new Promise(resolve=>{if(child.exitCode!==null)resolve();else{child.once('exit',resolve);setTimeout(()=>{child.kill('SIGKILL');resolve()},3000).unref()}})}

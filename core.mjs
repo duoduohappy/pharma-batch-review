@@ -25,7 +25,32 @@ export function seed(){
  const clean=make('B-261117-001','正常批次');
  const conflict=make('B-261117-002','检验与仓储冲突');conflict.lims.records[0].value=92.3;conflict.mes.deviations=[{id:'DEV-002',kind:'OOS',status:'OPEN',reason:'含量超出模拟标准',owner:'',evidence:''}];
  const missing=make('B-261117-003','记录缺失待整改');missing.lims.records[1].reviewer='';missing.mes.records.pop();missing.wms.records[0].status='QUARANTINE';
- return [clean,conflict,missing];
+ const cases=[clean,conflict,missing];
+ const extra=(n,name,mutate)=>{const b=make('B-261117-'+String(n).padStart(3,'0'),name);mutate(b);cases.push(b)};
+ extra(4,'批次身份不一致',b=>b.lims.batch_id='OTHER-BATCH');
+ extra(5,'必检项目缺失',b=>b.lims.records.pop());
+ extra(6,'检验单位不一致',b=>b.lims.records[0].unit='mg');
+ extra(7,'录入与复核人为同一人',b=>b.lims.records[0].reviewer=b.lims.records[0].analyst);
+ extra(8,'生产记录重复',b=>b.mes.records.push({...b.mes.records[0],id:'M-duplicate'}));
+ extra(9,'偏差关闭但缺少依据',b=>b.mes.deviations.push({id:'DEV-009',status:'CLOSED',owner:'QA-李',evidence:''}));
+ extra(10,'来源时间缺失',b=>b.wms.captured_at='');
+ extra(11,'结果恰好位于上下限',b=>{b.lims.records[0].value=95;b.lims.records[1].value=8});
+ extra(12,'仓储仍处于待检状态',b=>b.wms.records[0].status='QUARANTINE');
+ const descriptions=[
+ ['正常批次如何进入人工签核','全部固定检查通过，但不会自动放行。'],
+ ['为什么检验不合格时不能沿用仓储放行状态','预期 3 项阻断：超标、仓储冲突和未关闭 OOS。不能改原始数值消除异常。'],
+ ['如何保留初始问题、导入整改，再复验','预期 3 项阻断。导入模拟整改版本后复验，才可人工签核。'],
+ ['同名产品的数据为什么不能混批','预期 R01 阻断；先确认来源批次，不能拿别的批次检验结果放行。'],
+ ['检验值正常，为什么仍不能通过','预期缺少 pH 必检结果，并识别仓储放行冲突。'],
+ ['数值看似正常但单位错误','预期单位异常与仓储放行冲突，不能直接比较不同单位。'],
+ ['检验通过还需要谁复核','预期独立复核失败，并阻断仓储放行。'],
+ ['重复记录是否能被当作完整记录','预期 R05 阻断，须澄清重复生产记录。'],
+ ['把偏差状态改成关闭是否足够','预期 R06 阻断：关闭状态仍需处理人与证据。'],
+ ['缺少采集时间会有什么问题','预期 R01 阻断；本版验证格式和存在性，不验证数据时效。'],
+ ['限值边界是否被正确处理','含量 95%、pH 8 正好位于模拟限值，应通过检查，仍需人工审核。'],
+ ['所有检验通过是否等于仓库已放行','预期 R04 阻断，仓储状态仍需同步。']];
+ cases.forEach((b,i)=>b.scenario={purpose:descriptions[i][0],expected:descriptions[i][1]});
+ return cases;
 }
 export function validate(b){
  if(!b||typeof b!=='object'||!b.id||typeof b.id!=='string'||!b.product||!Number.isInteger(b.revision)||b.revision<1)throw Error('批次标识、产品编码或版本无效');
